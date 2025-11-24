@@ -217,15 +217,20 @@ export default function UsersDataTable() {
 
     return (
         <AuthenticatedLayout>
-            <PageHeader title="Users" actions={<Button onClick={openModal}>Add User</Button>} />
-            
-            <StatsCards stats={stats} />
-            
-            <Card>
-                <FilterBar config={filtersConfig} onChange={handleFiltersChange} />
-                <DataTable columns={columns} data={users.data} />
-            </Card>
-
+            <AppHeader/>
+            <Head title="Page Title" />
+            <Main>
+                {/* Header */}
+                <PageHeader/>
+                <div className="container mx-auto space-y-6 px-0 py-6">
+                    <StatsCards stats={stats} />
+                    
+                    <Card>
+                        <FilterBar config={filtersConfig} onChange={handleFiltersChange} />
+                        <DataTable columns={columns} data={users.data} />
+                    </Card>
+                </div>
+            </Main>    
             <UserDetailModal open={isModalOpen} />
         </AuthenticatedLayout>
     );
@@ -384,8 +389,32 @@ export function useUserFilters({ initialFilters }) {
  
 ### Error Handling
 
-- Show user-friendly error messages (using `ToastManager`)
-- Implement retry mechanisms
+### Error Handling
+
+- Show user-friendly error messages using `ToastManager`.
+- Use the `handle` function from `@/lib/error-handler` to normalize errors.
+- **Standard Pattern for Actions:**
+    ```typescript
+    const createUser = (data: UserFormData, options?: ActionOptions) => {
+        return router.post(store.url(), data, {
+            onSuccess: () => {
+                // Call optional callback first
+                if (options?.onSuccess) return options?.onSuccess?.();
+                
+                // Show default success message
+                ToastManager.success('User created successfully');
+            },
+            onError: (errors: any) => {
+                // Call optional callback with normalized error
+                if (options?.onError) return options?.onError?.(handle(errors));
+                
+                // Let ToastManager handle Inertia errors (skips validation errors automatically)
+                ToastManager.handleInertiaError(errors);
+            },
+        });
+    };
+    ```
+- Implement retry mechanisms where appropriate.
 
 ## Checklist for New Pages
 
